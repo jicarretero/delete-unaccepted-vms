@@ -6,9 +6,11 @@ The script uses 2 temporary files:
 * /tmp/accepted_list.txt  -- The file containing the usernames who have accepted
 * /tmp/vm_file.txt  -- The list of the instances in the node
 
-The scripts produces 2 result files:
+The scripts produces 4 result files:
 * /tmp/2delete.txt  -- This is a result file. A "script like" file of nova-delete commands to be executed.
 * /tmp/2keep.txt   -- This is another result file of images to be kept.
+* /tmp/2check.txt  -- This file is to manually check what to do with a VM
+* /tmp/ips2delete.txt -- This another "script like" file to delete floating IPs of users who have not accepted
 
 Before running the Script you must set the openstack variables, or exec your own "keystonerc" file:
 
@@ -21,7 +23,8 @@ Before running the Script you must set the openstack variables, or exec your own
 
 Known issues
 ------------
-* Please, be aware that this script doesn't seem to work with organizations. If a VM belongs to an orgnization, it might be deleted. So, some careful study of /tmp/2delete.txt file must be performed before deleting anything.
+* Please, be aware that this script doesn't seem to work with organizations. If a VM belongs to an orgnization, it is writen a "log line" in file /tmp/2check.txt -- This must be tested manually.
 
 * "nova list" only return 1000 results. If the amount of instances is bigger than that, the script might not completely work. It might be useful to be executed serveral times after the deletions.
 
+* This is not ready yet to clean and delete networks and routers for users.

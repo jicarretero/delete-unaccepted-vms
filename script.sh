@@ -39,20 +39,57 @@
 ACCEPT_FILE=/tmp/accepted_list.txt
 VM_FILE=/tmp/vm_file.txt
 DO_DELETE=/tmp/2delete.txt
+IPS_2_DELETE=/tmp/ips2delete.txt
 DONT_DELETE=/tmp/2keep.txt
+I_DONT_KNOW=/tmp/2check.txt
 
 > $DO_DELETE
 > $DONT_DELETE
+> $IPS_2_DELETE
+> $I_DONT_KNOW
 
 # Fill in the ACCEPTED file with people who have accepted
-curl http://terms.lab.fiware.org/api/v1/all_accepted?version=1.1  > $ACCEPT_FILE
-sed -e 's/\["//g' -e 's/","/\n/g' -e 's/\]"//g' -i $ACCEPT_FILE
+function get_accepted() {
+   curl http://terms.lab.fiware.org/api/v1/all_accepted?version=1.1  > $ACCEPT_FILE
+   sed -e 's/\["//g' -e 's/","/\n/g' -e 's/\]"//g' -i $ACCEPT_FILE
+}
 
 # Get the list of all VMs and keep IDs in a file
-nova list --all_tenants=1 | egrep -v "(+------|\| ID)" | \
-awk -F '|' '
-@include "trims.awk"
-{print trim($2)}' > $VM_FILE
+function list_vms() {
+   nova list --all_tenants=1 | egrep -v "(+------|\| ID)" | \
+   awk -F '|' '
+   @include "trims.awk"
+   {print trim($2)}' > $VM_FILE
+}
+
+#
+# Write in the "delete_floating_ip file the scritp to delte Floating IPs.
+#
+function delete_floating_ips() {
+   tenant=$1
+   for ip in `nova --os-tenant-name=$tenant floating-ip-list | egrep -v "(+------|\| Ip)" | \
+   awk -F '|' '
+   @include "trims.awk"
+   {print trim($2)}' `; do
+      echo "nova --os-tenant-name=$tenant floating-ip-delete $ip" | tee -a $IPS_2_DELETE
+   done
+}
+
+#
+# Check if it is user (curl answers "User" or if the User has removed himself "None"
+#
+function is_user_or_none() {
+    usertype=`curl -u $OS_USERNAME:$OS_PASSWORD https://admtools.lab.fi-ware.org/usertype/?tenant=$1 2>/dev/null`
+    [ $usertype == "User" -o $usertype == "None" ]
+}
+
+
+#### 
+## MAIN   --------
+##
+
+get_accepted
+list_vms
 
 # Just for every VM in the vm_file
 for vm in `cat $VM_FILE`; do
@@ -70,9 +107,17 @@ for vm in `cat $VM_FILE`; do
       # Write a log in a "keep file" --- 
       echo "keep $vm # user=${infor[0]} tenant=${infor[1]}" | tee -a $DONT_DELETE
    else
-      # Write a nova delete command in a delete file -- This file is like a script you
-      # can exec later.
-      echo "nova delete $vm # user=${infor[0]} tenant=${infor[1]}" | tee -a $DO_DELETE
+      is_user_or_none ${infor[1]}
+      if [ $? -eq 0 ] ; then
+          # Write a nova delete command in a delete file -- This file is like a script you
+          # can exec later.
+          echo "nova delete $vm # user=${infor[0]} tenant=${infor[1]}" | tee -a $DO_DELETE
+         delete_floating_ips ${infor[1]}
+      else
+          # Write a log in a "unknown file" --- 
+         echo "check this $vm # user=${infor[0]} tenant=${infor[1]}" | tee -a $I_DONT_KNOW
+      fi
+	  
    fi
 done
 
