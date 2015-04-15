@@ -11,11 +11,13 @@ The scripts produces 2 result files:
 * /tmp/2keep.txt   -- This is another result file of images to be kept.
 
 Before running the Script you must set the openstack variables, or exec your own "keystonerc" file:
-export OS_AUTH_URL=xxx
-export OS_USERNAME=xxx
-export OS_PASSWORD=xxx
-export OS_TENANT_NAME=xxx
-export OS_REGION_NAME=xxx
+
+    export OS_AUTH_URL=xxx
+    export OS_USERNAME=xxx
+    export OS_PASSWORD=xxx
+    export OS_TENANT_NAME=xxx
+    export OS_REGION_NAME=xxx
+
 
 Known issues
 ------------
