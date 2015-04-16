@@ -78,11 +78,11 @@ function list_vms() {
 #
 function delete_floating_ips() {
    tenant=$1
-   for ip in `nova --os-tenant-name=$tenant floating-ip-list | egrep -v "(+------|\| Ip)" | \
+   for ip in `nova --os_tenant_name=$tenant floating-ip-list | egrep -v "(+------|\| Ip)" | \
    awk -F '|' '
    @include "trims.awk"
    {print trim($2)}' `; do
-      echo "nova --os-tenant-name=$tenant floating-ip-delete $ip" | tee -a $IPS_2_DELETE
+      echo "nova --os_tenant_name=$tenant floating-ip-delete $ip" | tee -a $IPS_2_DELETE
    done
 }
 
