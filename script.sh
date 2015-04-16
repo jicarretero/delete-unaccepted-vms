@@ -34,6 +34,15 @@
 # Autor: Jose Ignacio Carretero Guarde.
 #
 
+#
+#
+# Before running this Script, set the following openstack's environment variables
+#    export OS_AUTH_URL=xxx
+#    export OS_USERNAME=xxx
+#    export OS_PASSWORD=xxx
+#    export OS_TENANT_NAME=xxx
+#    export OS_REGION_NAME=xxx
+ 
 
 # Some configuration
 ACCEPT_FILE=/tmp/accepted_list.txt
@@ -42,15 +51,17 @@ DO_DELETE=/tmp/2delete.txt
 IPS_2_DELETE=/tmp/ips2delete.txt
 DONT_DELETE=/tmp/2keep.txt
 I_DONT_KNOW=/tmp/2check.txt
+WORK_ON=/tmp/2workon.txt
 
 > $DO_DELETE
 > $DONT_DELETE
 > $IPS_2_DELETE
 > $I_DONT_KNOW
+> $WORK_ON
 
 # Fill in the ACCEPTED file with people who have accepted
 function get_accepted() {
-   curl http://terms.lab.fiware.org/api/v1/all_accepted?version=1.1  > $ACCEPT_FILE
+   curl http://terms.lab.fiware.org/api/v1/all_accepted?version=1.1 > $ACCEPT_FILE 2>/dev/null
    sed -e 's/\["//g' -e 's/","/\n/g' -e 's/\]"//g' -i $ACCEPT_FILE
 }
 
@@ -112,7 +123,8 @@ for vm in `cat $VM_FILE`; do
           # Write a nova delete command in a delete file -- This file is like a script you
           # can exec later.
           echo "nova delete $vm # user=${infor[0]} tenant=${infor[1]}" | tee -a $DO_DELETE
-         delete_floating_ips ${infor[1]}
+          delete_floating_ips ${infor[1]}
+          echo "${infor[0]} ${infor[1]}" | tee -a $WORK_ON
       else
           # Write a log in a "unknown file" --- 
          echo "check this $vm # user=${infor[0]} tenant=${infor[1]}" | tee -a $I_DONT_KNOW
