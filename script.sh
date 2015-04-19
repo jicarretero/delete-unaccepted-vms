@@ -62,7 +62,7 @@ WORK_ON=/tmp/2workon.txt
 # Fill in the ACCEPTED file with people who have accepted
 function get_accepted() {
    curl http://terms.lab.fiware.org/api/v1/all_accepted?version=1.1 > $ACCEPT_FILE 2>/dev/null
-   sed -e 's/\["//g' -e 's/","/\n/g' -e 's/\]"//g' -i $ACCEPT_FILE
+   sed -e 's/\["//g' -e 's/","/\n/g' -e 's/"\]//g' -i $ACCEPT_FILE
 }
 
 # Get the list of all VMs and keep IDs in a file
