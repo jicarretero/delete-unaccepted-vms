@@ -68,8 +68,8 @@ function get_accepted() {
 # Get the list of all VMs and keep IDs in a file
 function list_vms() {
    nova list --all_tenants=1 | egrep -v "(+------|\| ID)" | \
-   awk -F '|' '
-   @include "trims.awk"
+   igawk -F '|' '
+   @include trims.awk
    {print trim($2)}' > $VM_FILE
 }
 
@@ -79,8 +79,8 @@ function list_vms() {
 function delete_floating_ips() {
    tenant=$1
    for ip in `nova --os_tenant_name=$tenant floating-ip-list | egrep -v "(+------|\| Ip)" | \
-   awk -F '|' '
-   @include "trims.awk"
+   igawk -F '|' '
+   @include trims.awk
    {print trim($2)}' `; do
       echo "nova --os_tenant_name=$tenant floating-ip-delete $ip" | tee -a $IPS_2_DELETE
    done
@@ -106,8 +106,8 @@ list_vms
 for vm in `cat $VM_FILE`; do
    # Query user_id and tenant_id
    infor=(`nova show $vm | \
-   awk -F '|' '
-      @include "trims.awk"
+   igawk -F '|' '
+      @include trims.awk
       /user_id/ {uid=trim($3)}
       /tenant_id/ {tid=trim($3)}
       END {print uid, tid}
